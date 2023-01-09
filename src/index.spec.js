@@ -1,31 +1,244 @@
 import supertest from "supertest";
 
+// Что вам нравится и что вам не нравится здесь в этих тестах.
+// Максимальное количество ошибок и недочетов.
+// 1. Нет проверки на текст ошибки
+// 2. не нравится describe) кажется что не информативно
+// 3. Нет контроллеров.
+// 4. Логин и пароль прям в тесте
+// 5. Все в конфиг можно вынести(url, login, password)
+// 6. Слабые expect-ы(ничего толком не проверяют)
+// 7. Будет ошибка при многократном запуске. Flaky test.
+// 8. 
+
+// 1. Вынести в конфиг URL сервера. Я бы задал его как переменную окружения.
+// 2. Входные данные захардкодили.
+
+// import 
+import { faker } from '@faker-js/faker';
+import { matchers } from 'jest-json-schema';
+expect.extend(matchers);
+import config from'./config'
+import { generateUser } from './utils/generate-user'
+
+// 6.6.6 
+
+// 1. Длинна пароля
+// 2. Допустимые значения
+// 3.
+
+// console.log('password', faker.internet.password())
+
+// generateUser используется везде
+// 1. Передать неверный пароль в функцию, как аргумент или часть объекта
+// 2. Сделать наш объект расширяемым
+
+// const user = {
+//   ...generateUser(), // object.assign через spread-оператор(это ...)
+//   password: faker.internet.password(6, false, /[a-zA-Z0-9!@#$%^&*]/)
+// }
+
+// Object.assign - это метод, который позволяет объеденить два объекта
+// const user = Object.assign(
+//   generateUser(),
+//   {
+//     password: faker.internet.password(6, false, /[a-zA-Z0-9!@#$%^&*]/)
+//   }
+// )
+
+// const testObject = Object.assign(
+//   { a: '1', b: '2' },
+//   { c: '3' }
+// )
+
+// console.log(testObject) // { a: '1', b: '2', c: '3' }
+
+// const testObject2 = Object.assign(
+//   { a: '1', b: '2' },
+//   { b: '3' }
+// )
+
+// console.log(testObject) // { a: '1', b: '3' }
+
+// console.log('user', user)
+
+// // generateUser({
+//   password: faker.internet.password(5, false, /[a-zA-Z0-9!@#$%^&*]/)
+// }
+
+// Паттерны проектирования
+// Порождающие паттерны
+// - Фабрика
+// - Строитель
+
+
+// Наша функция создает объект юзер
+// function createUser() {
+//   const user = {
+//     data: {
+//       userName: faker.internet.userName(),
+//       password: faker.internet.password(32, false, /[a-zA-Z0-9!@#$%^&*]/),
+//     },
+//     getData: function () {
+//       return user.data
+//     }, // значение ключа getData присвоена функция
+//     generateShortPassword() {
+//       this.data.password = faker.internet.password(5, false, /[a-zA-Z0-9!@#$%^&*]/)
+  
+//       return this;
+//     },
+//     generateWrongPassword() {
+//       user.data.password = faker.internet.password(32, false, /[a-zA-Z0-9]/)
+  
+//       return user;
+//     }
+//   }
+
+//   return user;
+// }
+
+// Методы - это функции в составе объектов
+
+
+// const user = createUser()
+
+// console.log('user before', user.getData())
+
+// user.generateShortPassword()
+
+// console.log('user after', user.getData())
+
+
+// Как создавать входные данные?
+// 1. Хардкоду - нет
+// 2. Рандомайзерам - да. Использовать @faker/faker-js
+// 3. Создать отдельные директории куда складывать генераторы данных.
+// 4. Если хотите применить паттерн, то используйте builder(строитель)
+
+async function deleteUser(user, userId) {
+  const resGenerateToken = await supertest(config.baseURL)
+    .post('/account/v1/GenerateToken')
+    .set('Accept', 'application/json')
+    .send(user);
+
+
+  await supertest(config.baseURL)
+    .delete(`/account/v1/user/${userId}`)
+    .set('Authorization', `Bearer ${resGenerateToken.body.token}`);
+}
+
 describe("Bookstore", () => {
   describe('POST /account/v1/user', () => {
-    it("Should create new user", async () => {
-      const response = await supertest('https://bookstore.demoqa.com')
-        .post('/account/v1/user')
-        .set('Accept', 'application/json')
-        .send({
-          userName: "nik12345",
-          password: "Q*ZGTMt6Us+j@N9j!",
-        });
+    // it("Should create new user", async () => {
+    //   const user = generateUser()
 
-      expect(response.status).toEqual(201);
-    });
+    //   const response = await supertest(config.baseURL)
+    //     .post('/account/v1/user')
+    //     .set('Accept', 'application/json')
+    //     .send(user);
+
+    //   // Что не так 
+    //   // 1. Парсить полностью ответ от сервера.
+    //   // 2. Сделать GET запрос что пользователь есть.
+    //   expect(response.status).toEqual(201);
+      
+    //   // Как проверить данные от сервера
+    //   // 1. Снапш
+
+    //   await deleteUser(user, response.body.userID)
+
+    //   // сlean data
+    // });
+
+    // it("Should not create new user", async () => {
+    //   const response = await supertest(config.baseURL)
+    //     .post('/account/v1/user')
+    //     .set('Accept', 'application/json')
+    //     .send({
+    //       ...generateUser(),
+    //       password: faker.internet.password(6, false, /[a-zA-Z0-9!@#$%^&*]/)
+    //     }); // сделать пароль неверным
+
+    //   expect(response.status).toEqual(201);
+    // });
   });
+
+  /* json schema
+    {
+      "title": "Product",
+      "description": "A product from Acme's catalog",
+      "type": "object",
+      "properties": {
+        "productId": {
+          "description": "The unique identifier for a product",
+          "type": "integer"
+        },
+        "productName": {
+          "description": "Name of the product",
+          "type": "string"
+        }
+      },
+      "required": [ "productId", "productName" ]
+    } ->
+
+    {
+      "productId": 1,
+      "productName": "name"
+    } // это валидный объект по схеме
+
+    {
+      "productId": 1
+    } // это не валидный валидный объект по схеме
+
+    {
+      "productId": "1",
+      "productName": "name"
+    } // это не валидный валидный объект по схеме
+  */
 
   describe('POST /account/v1/GenerateToken', () => {
     it("Should generate token for user by username and password", async () => {
-      const response = await supertest('https://bookstore.demoqa.com')
+      const user = generateUser()
+
+      await supertest(config.baseURL)
+        .post('/account/v1/user')
+        .set('Accept', 'application/json')
+        .send(user);
+
+      const response = await supertest(config.baseURL)
         .post('/account/v1/GenerateToken')
         .set('Accept', 'application/json')
-        .send({
-          userName: "nik12345",
-          password: "Q*ZGTMt6Us+j@N9j!",
-        });
+        .send(user);
 
+      const schema = {
+        type: "object",
+        required: ["token", "expires", "status", "result"],
+        additionalProperties: false,
+        properties: {
+          token: {type: "string"},
+          expires: {type: "string", format: 'date-time'},
+          status: {type: "string"},
+          result: {type: "string"}
+        }
+      }
+
+      // Проверяем статус
       expect(response.status).toEqual(200);
+
+      // Проверяем валидность схемы
+      expect(response.body).toMatchSchema(schema)
+
+      // Если надо проверяем сами данные
+      expect(response.body).toMatchSnapshot({
+        expires: expect.any(String), // expires - это один из ключей в ответе от сервера 
+        token: expect.any(String),
+      })
+
+      // Проверить себя через GET запрос
+
+      // "2023-01-16T18:22:42.204Z" - это дата в виде строки. ISO Date with time
+
+      // expect.any(String) - это любая строка
     });
   });
 });

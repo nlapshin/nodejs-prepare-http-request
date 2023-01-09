@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Bookstore POST /account/v1/GenerateToken Should generate token for user by username and password 1`] = `
+{
+  "expires": Any<String>,
+  "result": "User authorized successfully.",
+  "status": "Success",
+  "token": Any<String>,
+}
+`;
